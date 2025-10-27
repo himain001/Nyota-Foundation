@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nyota Foundation</title>
+<style>
+  body {
+    font-family: "Poppins", sans-serif;
+    background: linear-gradient(135deg, #2e7d32, #66bb6a);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+  }
+  .app-card {
+    background: #fff;
+    width: 95%;
+    max-width: 420px;
+    border-radius: 25px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    overflow: hidden;
+    animation: fadeIn 0.7s ease;
+    text-align: center;
+  }
+  @keyframes fadeIn {
+    from {opacity: 0; transform: translateY(20px);}
+    to {opacity: 1; transform: translateY(0);}
+  }
+  .top-bar {
+    background: #000;
+    padding: 15px;
+    color: white;
+  }
+  .top-bar img {
+    width: 70px;
+    height: 70px;
+    border-radius: 10px;
+    background: white;
+    padding: 5px;
+  }
+  .app-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-top: 5px;
+  }
+  .form-area {
+    padding: 20px;
+  }
+  input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    font-size: 15px;
+    box-sizing: border-box;
+  }
+  input:focus {
+    border-color: #c62828;
+    outline: none;
+  }
+  button {
+    background: #c62828;
+    color: white;
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  button:hover {
+    background: #b71c1c;
+  }
+  .footer-bar {
+    text-align: center;
+    font-size: 13px;
+    padding: 10px 0;
+    background: #000;
+    color: white;
+  }
+  .footer-bar span { color: #43a047; }
+  .msg {
+    margin-top: 10px;
+    font-size: 15px;
+  }
+  #dashboard { display: none; padding: 20px; }
+  .amount-box {
+    background: linear-gradient(45deg, #388e3c, #81c784);
+    color: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin: 15px 0;
+    font-size: 18px;
+  }
+</style>
+<script src="https://js.paystack.co/v1/inline.js"></script>
+</head>
+<body>
+
+<div class="app-card">
+  <div class="top-bar">
+    <img src="logo.png" alt="logo">
+    <div class="app-title">Nyota Foundation</div>
+    <div style="font-size:12px;">Empowering Kenya • One Loan at a Time 🇰🇪</div>
+  </div>
+
+  <!-- Step 1: Registration -->
+  <div id="register">
+    <div class="form-area">
+      <h3>Create Your Account</h3>
+      <form id="regForm">
+        <input type="text" id="regName" placeholder="Full Name" required>
+        <input type="email" id="regEmail" placeholder="Email" required>
+        <input type="tel" id="regPhone" placeholder="Phone Number" required>
+        <input type="password" id="regPass" placeholder="Password" required>
+        <button type="submit">🇰🇪 Register Now</button>
+      </form>
+      <div class="msg" id="regMsg"></div>
+    </div>
+  </div>
+
+  <!-- Step 2: Dashboard -->
+  <div id="dashboard">
+    <h3 id="welcomeMsg"></h3>
+    <div class="amount-box" id="qualifiedBox"></div>
+    <p style="font-size:14px;">Apply for your first loan below 👇🏾</p>
+    <button id="applyBtn">🇰🇪 Apply Now </button>
+    <div class="msg" id="payMsg"></div>
+  </div>
+
+  <div class="footer-bar">
+    🇰🇪 Powered by <span>Nyota Foundation</span>
+  </div>
+</div>
+
+<script>
+  const regForm = document.getElementById('regForm');
+  const regMsg = document.getElementById('regMsg');
+  const dashboard = document.getElementById('dashboard');
+  const register = document.getElementById('register');
+  const welcomeMsg = document.getElementById('welcomeMsg');
+  const qualifiedBox = document.getElementById('qualifiedBox');
+  const payMsg = document.getElementById('payMsg');
+
+  regForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const name = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const phone = document.getElementById('regPhone').value.trim();
+    const pass = document.getElementById('regPass').value.trim();
+
+    if (!name || !email || !phone || !pass) {
+      regMsg.style.color = "red";
+      regMsg.textContent = "Please fill all fields.";
+      return;
+    }
+
+    // Save user info locally
+    localStorage.setItem('nyotaUser', JSON.stringify({ name, email, phone }));
+
+    // Simulate qualification amount (random)
+    const qualified = Math.floor(Math.random() * 30000) + 5000;
+    localStorage.setItem('qualifiedAmount', qualified);
+
+    // Redirect to dashboard
+    register.style.display = "none";
+    dashboard.style.display = "block";
+    welcomeMsg.textContent = `Welcome ${name}!`;
+    qualifiedBox.innerHTML = `You qualify for up to <b>Ksh ${qualified.toLocaleString()}</b>`;
+  });
+
+  // Apply button
+  document.getElementById('applyBtn').addEventListener('click', function() {
+    const user = JSON.parse(localStorage.getItem('nyotaUser')) || {};
+    if (!user.email) {
+      payMsg.style.color = "red";
+      payMsg.textContent = "Please register first.";
+      return;
+    }
+
+    let handler = PaystackPop.setup({
+      key: 'pk_live_b0a29d1d61268d8efd7d0b7e0159b6b036a0d124',
+      email: user.email,
+      amount: 49 * 100, // Ksh 49
+      currency: "KES",
+      ref: 'NYOTA-' + Math.floor((Math.random() * 1000000000) + 1),
+      metadata: {
+        custom_fields: [
+          { display_name: "Full Name", variable_name: "full_name", value: user.name },
+          { display_name: "Phone", variable_name: "phone_number", value: user.phone },
+          { display_name: "Qualified Amount", variable_name: "qualified_amount", value: localStorage.getItem('qualifiedAmount') }
+        ]
+      },
+      callback: function(response) {
+        payMsg.style.color = "green";
+        payMsg.innerHTML = "✅ Payment successful!<br>Your loan will be processed shortly.<br>Ref: <b>" + response.reference + "</b>";
+      },
+      onClose: function() {
+        payMsg.style.color = "orange";
+        payMsg.textContent = "Payment window closed.";
+      }
+    });
+    handler.openIframe();
+  });
+
+  // Auto show dashboard if user already registered
+  window.onload = () => {
+    const user = localStorage.getItem('nyotaUser');
+    if (user) {
+      const info = JSON.parse(user);
+      register.style.display = "none";
+      dashboard.style.display = "block";
+      welcomeMsg.textContent = `Welcome back, ${info.name}!`;
+      qualifiedBox.innerHTML = `You qualify for up to <b>Ksh ${localStorage.getItem('qualifiedAmount')}</b>`;
+    }
+  }
+</script>
+
+</body>
+</html>
